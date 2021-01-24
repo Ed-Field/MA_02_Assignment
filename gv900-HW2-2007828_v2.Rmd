@@ -1,0 +1,291 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+|                                        |
+|:--------------------------------------:|
+| R code for GV900 Homework Assignment 2 |
+|          University of Essex           |
+
+### Task 1- Load 6 r packages
+
+```{r warning=FALSE}
+library(ggplot2)
+library(gmodels)
+library(Hmisc)
+library(stargazer)
+library(effects)
+library(gridExtra)
+```
+
+### Task 2- Load Titanic csv file and store as object called td.
+
+```{r}
+td.fp <- file.path("data","titanic.csv")
+td. <- read.csv(td.fp)
+```
+
+### Task 3- How many passengers were on board?
+
+```{r}
+nrow(td.) #Answer: 1309
+```
+
+### Task 4 - Create a frequency table for the survived variable
+
+```{r}
+table(td.$survived)
+```
+
+### Task 5- Calculate the survival percentage
+
+1309 passengers
+
+500 survived
+
+500/1309\*100 = 38.1971%
+
+### Task 6- Create a frequency table for class tickets
+
+```{r}
+table(td.$pclass)
+```
+
+### Task 7- Identifying Variables
+
+**What is the dependent variable of the investigation?**
+
+*Answer: Passenger Survival*
+
+**What is the independent variable of the investigation?**
+
+*Answer*: *Socio-Economic class of passengers*
+
+### Task 8- Create a cross-tabulation table for 'pclass' and 'survived' variables
+
+```{r}
+CrossTable(td.$ survived, td.$ pclass, prop.r = FALSE,
+prop.t = FALSE,
+prop.chisq = FALSE, chisq = TRUE)
+```
+
+### Task 9 - Interpret the cross-tabulation table
+
+a)  **What is the survival rate among 1st class passengers**
+
+*Answer a): 61.9%*
+
+b)  **What is the survival rate among 2nd class passengers**
+
+    *Answer b): 43.0%*
+
+c)  **What is the survival rate among 3rd class passengers**
+
+    *Answer c): 25.5%*
+
+### Task 10- Relationship with socio-economic class and survival
+
+According to the statistics, there is a negative relationship between
+the passengers socio-economic class, and the rate of survival. It
+appears that the richer the passengers were, the higher likelihood that
+they would survive the sinking, as we predicted in our hypothesis.
+
+### Task 11- Summarizing the results
+
+*Answer 1): j (0.05)*
+
+*Answer 2): n (reject)*
+
+*Answer 3): g (95%)*
+
+*Answer 4): p (do not find)*
+
+### Task 12- Explore the relationship between female passengers and fare
+
+```{r}
+td.Fare <- td.[!is.na(td.$fare),]
+```
+
+```{r message=FALSE}
+g <- ggplot(td.Fare, aes(x = fare)) + geom_histogram()
+g <- g + theme(axis.text.x = element_text(size = 14))
+g <- g + xlab("Price of Ticket") + ylab("Gender of Passengers")
+g <- g + stat_bin(bins=50)
+g <- g + facet_grid(~ female)
+g
+```
+
+```{r}
+by(data = td.Fare $ fare,  
+   INDICES = td.Fare $ female,   
+   FUN = summary)             
+```
+
+```{r}
+t.test( fare ~ female,      
+        data = td.Fare,   
+        var.equal = TRUE) 
+```
+
+### Task 13- Interpret the results of the bivariate test
+
+Looking at the graph, it appears that females pay more for their ticket
+then men do, because the vast majority of the male tickets were priced
+under at £100 or under, whereas there is still a significant amount of
+females who paid over that amount.
+
+This appears true of we look at the mean price comparison. The mean
+price for females was £46.20 whereas the mean price for men was £26.15.
+
+Overall, looking at the graphs and statistics, it is evident that female
+passengers had more expensive tickets compared to men
+
+### Task14- Explore the relationship between age and fare graphically
+
+```{r}
+# Remove rows with NULL age
+td.age <- td.[!is.na(td.$age),]
+```
+
+```{r warning = FALSE}
+g <- ggplot(td.age, aes( x=age, y=fare) ) + geom_point()
+g <- g + ylab("Price of Ticket") + xlab("Age of Passengers")
+g
+```
+
+### Task 15- Perform an appropriate bivariate statistical test to explore the relationship between age and fare
+
+```{r}
+td.ag.fr <- na.omit(td.[,c(4,11)])
+
+lab.uni.mat <- as.matrix(td.ag.fr[ c("fare","age")])
+rcorr(lab.uni.mat, type = "pearson")
+        
+```
+
+### Task 16- Interpret the results of the bivariate test
+
+Looking at the graph, there doesn't appear to any correlation between
+age and fare.
+
+This appears to be true in the statistics, as the p value = 0.
+
+This means we need to reject the null hypothesis To conclude, there
+isn't a significant relationship between age and fare
+
+### Task 17- Regress fare on age, and produce a regression table using the stargazer function.
+
+```{r}
+fit.1 <- lm(fare ~ age, data = td.)
+
+stargazer(fit.1, type = "text")
+```
+
+### Task 18- Create a plot that illustrates the estimated effect of age on fare based on the model you estimated above
+
+```{r}
+effect("age", mod = fit.1)
+eff.age <- effect("age", mod = fit.1)
+plot(eff.age)
+
+plot(eff.age, 
+     main = "Affect of Age on Ticket Prices",
+     xlab = "Age of Passengers",
+     ylab = "Ticket Fares")
+```
+
+### Task 19- Looking at the graph and the regression table, is there a positive correlation between age and fare
+
+Looking at the graphical results, it is evident that there is a positive
+correlation between age and fare prices. Statistically, we can see that
+this is true because the R2 number is relatively high at 0.032. To
+conclude, we can see that on average, the older the passenger is, the
+higher the likelihood that the passengers pays a higher fare.
+
+### Task 20- Graphically explore the relationship between age and fare, holding constant the female variable
+
+```{r}
+td.ag.ge.fr <- na.omit(td.[,c(4,7,11)])
+
+g <- ggplot(td.ag.ge.fr, aes( x=age, y=fare) ) + geom_point()
+g <- g + ylab("Price of Ticket") + xlab("Age of Passengers")
+g <- g + facet_grid(~ female)
+g
+```
+
+### Task 21
+
+### Using stargazer, regress fare on age and female
+
+```{r}
+# New Model fare ~ female
+fit.2 <- lm(fare ~ age + female, data = td.)
+
+# Summarise model
+summary(fit.2)
+
+```
+
+Compare the model from Task 17 (fit.1) with the model from this Task
+(fit.2)
+
+```{r}
+ suppressWarnings( # Using supressWarnings here to remove length NULL message
+                  stargazer(fit.1,fit.2, type = "text") 
+                  )
+
+```
+
+### Task 22
+
+### Which one of the two regression models performs better?
+
+*Answer 1): D (Adjusted R2)*
+
+*Answer 2): F (Smaller)*
+
+*Answer 3): H (First)*
+
+*Answer 4): I (Second*)
+
+### Task 23 - Estimate the effect of female on fare based on the second regression model you estimated
+
+```{r}
+eff.fr.ge <- effect(term = "female", 
+                      mod = fit.2)
+(plot.fr.ge <- plot(eff.fr.ge,  main = "Gender Effect Plot", ylim = c(0, 110)))
+
+```
+
+### Task 24 - Create a plot that estimates age on fare for male and female passengers separately based on the second regression model
+
+#### Effects and Plot solution (holding Female variable constant)
+
+Convert female to binary variable. Run linear regression using new binary variable. Generate effect objects for
+Male and Female holding on female as constant.
+```{r}
+female.1 <- ifelse(td. $ female == "Female", 1, 0)
+fit.3 <- lm(fare ~ age + female.1, data = td.)
+eff.fr.ag.ge.1 <- effect(term = "age", 
+                      mod = fit.3, 
+                      given.values = c("female.1" = 1))
+eff.fr.ag.ge.0 <- effect(term = "age", 
+                      mod = fit.3, 
+                      given.values = c("female.1" = 0))
+```
+
+Generate plot objects.
+```{r}
+plot.fr.ag.ge.1 <- plot(eff.fr.ag.ge.0,  main = "Female Effect Plot"  , ylim = c(0, 110))
+plot.fr.ag.ge.0 <- plot(eff.fr.ag.ge.0,  main = "Male Effect Plot"  , ylim = c(0, 110))
+
+```
+
+Output plots in 2 column, side-by-side, for female and male.
+```{r}
+grid.arrange(plot.fr.ag.ge.1, plot.fr.ag.ge.0, ncol = 2)
+```
+
+**End of File**
